@@ -273,3 +273,46 @@ can_gas_fit |>
 #that should be modeled further. Since the p value is below .05, we reject the null hypothesis at the 
 #5% level, meaning that the resduals are not in fact white noise.
 
+gas_cv_fc <- can_gas |>
+  select(Month, Volume) |>
+  stretch_tsibble(.init = 240, .step = 1) |>
+  model(snaive = SNAIVE(Volume),
+        tslm   = TSLM(log(Volume) ~ trend() + season())) |>
+  forecast(h = 1)
+
+gas_cv_fc |> accuracy(can_gas, measures = list(MAE = MAE, RMSE = RMSE))
+
+#The First date is January 1980 and the final date is March of 2005.The MAE is .562 for the
+#SNAIVE model and 4.01 for the TSLM model. The RMSE is .702 for the SNAIVE model and 4.36 for the TSLM model.
+#The SNAIVE forecasts much more accurately.
+
+errs <- gas_cv_fc |>
+  as_tibble() |>
+  left_join(as_tibble(can_gas) |> select(Month, actual = Volume),
+            by = "Month") |>
+  mutate(e = actual - .mean) |>
+  select(Month, .model, e) |>
+  pivot_wider(names_from = .model, values_from = e) |>
+  na.omit()
+
+forecast::dm.test(errs$snaive, errs$tslm, h = 1, power = 1)
+
+#The DM is -31.278 and the p-value is 2.2e^-16, much smaller than .05. Therefore we reject the null hypothesis 
+#at the 5% level of equal forecast accuracy. One forecast (the seasonal random walk)is more accurate than the other. 
+
+
+gas_cv_fc <- can_gas |>
+  select(Month, Volume) |>
+  slide_tsibble(.size = 240, .step = 1) |>
+  model(snaive = SNAIVE(Volume),
+        tslm   = TSLM(log(Volume) ~ trend() + season())) |>
+  forecast(h = 1)
+
+gas_cv_fc |> accuracy(can_gas, measures = list(MAE = MAE, RMSE = RMSE))
+
+#While the Seasonal Random Walk error values remain the same, the TSLM model's errors are much smaller.
+#This because as the TSLM model is more trained on recent data and it can adapt better to recent trends. 
+#The older data might not fit the current pattern. 
+
+
+
