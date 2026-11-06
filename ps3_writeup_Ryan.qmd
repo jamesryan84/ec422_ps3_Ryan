@@ -1,0 +1,39 @@
+---
+title: "ps3_writeup_Ryan.qmd"
+author: "James Ryan"
+date: 11/03/26
+html: 
+  toc: true
+  embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+**GitHub repo:** <https://github.com/jamesryan84/ec422_ps3_Ryan>
+
+## Part 2
+
+```{r}
+library(tidyverse)
+
+retail_raw <- read_csv("data/retail_sales_raw.csv")
+
+head(retail_raw)
+
+#The class is a date
+
+retail_raw <- read_csv(
+  "data/retail_sales_raw.csv",
+  na = ".",
+  col_types = cols(
+    observation_date = col_date(format = "%Y-%m-%d"),
+    RSAFS = col_double(),
+    RSAFSNA = col_double()
+  )
+)
+```
+The dataset retail_ts is from FRED and has monthly frequency with seriesid as 
+the index and date as  and key. The dataset canadian_gas is directly within R
+and also has monthly frequency. 
+

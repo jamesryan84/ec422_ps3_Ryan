@@ -131,8 +131,8 @@ retail_nsa |> autoplot(log_sales) +
   labs(title = "Logged NSA Retail Sales", x = NULL, y = "Log of Millions of dollars") 
 + theme_minimal()
 
-#I think the case for logging the data is weaker for the retail sales data, 
-#because the seasonal swings are not as large as the gas production data.
+# I think the case for logging the data is weaker for the retail sales data,
+# because the seasonal swings are not as large as the gas production data.
 
 can_gas <- can_gas |>
   mutate(
@@ -149,8 +149,8 @@ can_gas <- can_gas |>
 
 can_gas |> autoplot(growth_gap)
 
-#The log difference approximation seems reasonably accurately, but does differ by
-#over 3 in some cases
+# The log difference approximation seems reasonably accurately, but does differ by
+# over 3 in some cases
 
 retail_ts <- retail_ts |>
   group_by_key() |>
@@ -165,9 +165,9 @@ retail_ts |>
   ) +
   theme_minimal()
 
-#The RASFSNA is much noiser than its seasonally adjusted counterpart. 
-#This is because the NSA data has seasonal swings that weren't taken out of the
-#data and therefore shows sales varying wildly from month to month.
+# The RASFSNA is much noiser than its seasonally adjusted counterpart.
+# This is because the NSA data has seasonal swings that weren't taken out of the
+# data and therefore shows sales varying wildly from month to month.
 
 retail_ts |>
   filter(series_id == "RSAFSNA") |>
@@ -187,15 +187,15 @@ retail_ts |>
   ) +
   theme_minimal()
 
-#The seasonal plot in the Seasonally Adjusted series has mostly straight line and therefore 
-#constant growth, no matter what month. The main dip in the RSAFS data is due to COVID.
-#On the other hand the growth for the NSA data varies much more from month to month.
+# The seasonal plot in the Seasonally Adjusted series has mostly straight line and therefore
+# constant growth, no matter what month. The main dip in the RSAFS data is due to COVID.
+# On the other hand the growth for the NSA data varies much more from month to month.
 
 can_gas |> gg_season(log_volume) + labs(
   title = "Seasonal Pattern in Canadian Gas Production", y = "log(Volume")
 
-#The winter months tend to be higher for natural gas production, which makes sense
-#as it is used for heating. 
+# The winter months tend to be higher for natural gas production, which makes sense
+# as it is used for heating.
 
 can_gas |>
   gg_subseries(log_volume) +
@@ -234,9 +234,9 @@ sa_compare |>
   ) +
   theme_minimal()
 
-#The adjustment seems to match relatively well, with a average percentage difference
-#well under 1%. However this rapidly changes past 2020, where tht differences between
-#the two go over 1%.
+# The adjustment seems to match relatively well, with a average percentage difference
+# well under 1%. However this rapidly changes past 2020, where tht differences between
+# the two go over 1%.
 
 can_gas_fit <- can_gas |>
   model(TSLM(log_volume ~ trend() + season()))
@@ -248,8 +248,8 @@ can_gas_fit |>
   select(term, estimate, std.error, statistic, p.value) |>
   knitr::kable(digits = 3)
 
-#The average monthly growth rate of gas production is about 4%. The most significant 
-#seasonal effect appears to be June (month 6)
+# The average monthly growth rate of gas production is about 4%. The most significant
+# seasonal effect appears to be June (month 6)
 
 can_gas_fit |>
   augment() |>
@@ -260,8 +260,8 @@ can_gas_fit |>
        y = "log(Volume)", color = NULL) +
   theme_minimal()
 
-#Our model gets the  increasing trend correct, but it is linear isntead of exponential.
-#Therefore we don't get the massive increase in the beginning of the graph for Canadian gas production
+# Our model gets the  increasing trend correct, but it is linear isntead of exponential.
+# Therefore we don't get the massive increase in the beginning of the graph for Canadian gas production
 
 can_gas_fit |> gg_tsresiduals()
 
@@ -269,9 +269,9 @@ can_gas_fit |>
   augment() |>
   features(.innov, ljung_box, lag = 24)
 
-#The residuals do not look like white noise and there is definitely visible structure
-#that should be modeled further. Since the p value is below .05, we reject the null hypothesis at the 
-#5% level, meaning that the resduals are not in fact white noise.
+# The residuals do not look like white noise and there is definitely visible structure
+# that should be modeled further. Since the p value is below .05, we reject the null hypothesis at the
+# 5% level, meaning that the resduals are not in fact white noise.
 
 gas_cv_fc <- can_gas |>
   select(Month, Volume) |>
@@ -282,9 +282,9 @@ gas_cv_fc <- can_gas |>
 
 gas_cv_fc |> accuracy(can_gas, measures = list(MAE = MAE, RMSE = RMSE))
 
-#The First date is January 1980 and the final date is March of 2005.The MAE is .562 for the
-#SNAIVE model and 4.01 for the TSLM model. The RMSE is .702 for the SNAIVE model and 4.36 for the TSLM model.
-#The SNAIVE forecasts much more accurately.
+# The First date is January 1980 and the final date is March of 2005.The MAE is .562 for the
+# SNAIVE model and 4.01 for the TSLM model. The RMSE is .702 for the SNAIVE model and 4.36 for the TSLM model.
+# The SNAIVE forecasts much more accurately.
 
 errs <- gas_cv_fc |>
   as_tibble() |>
@@ -297,9 +297,9 @@ errs <- gas_cv_fc |>
 
 forecast::dm.test(errs$snaive, errs$tslm, h = 1, power = 1)
 
-#The DM is -31.278 and the p-value is 2.2e^-16, much smaller than .05. Therefore we reject the null hypothesis 
-#at the 5% level of equal forecast accuracy. One forecast (the seasonal random walk)is more accurate than the other. 
-
+# The DM is -31.278 and the p-value is 2.2e^-16, much smaller than .05. Therefore we reject the null hypothesis
+# at the 5% level of equal forecast accuracy. One forecast (the seasonal random walk) is more accurate than the other.
+# 
 
 gas_cv_fc <- can_gas |>
   select(Month, Volume) |>
@@ -310,9 +310,9 @@ gas_cv_fc <- can_gas |>
 
 gas_cv_fc |> accuracy(can_gas, measures = list(MAE = MAE, RMSE = RMSE))
 
-#While the Seasonal Random Walk error values remain the same, the TSLM model's errors are much smaller.
-#This because as the TSLM model is more trained on recent data and it can adapt better to recent trends. 
-#The older data might not fit the current pattern. 
+# While the Seasonal Random Walk error values remain the same, the TSLM model's errors are much smaller.
+# This because as the TSLM model is more trained on recent data and it can adapt better to recent trends.
+# The older data might not fit the current pattern.
 
 
 
